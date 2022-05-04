@@ -1,6 +1,6 @@
 import type { NextPage } from 'next';
 import Image from 'next/image';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { getPokemon, Pokemon, PokemonType } from '../queries/pokemon.query';
 import { lighten } from 'polished';
 
@@ -27,6 +27,31 @@ const TypeColorMap = {
   shadow: '#000000',
 };
 
+const gradient = (types: PokemonType[], hover?: boolean) => {
+  const lightenFactor = 0.1;
+
+  const color1 = hover
+    ? lighten(lightenFactor, TypeColorMap[types[0]])
+    : TypeColorMap[types[0]];
+
+  const color2 =
+    types.length > 1
+      ? hover
+        ? lighten(lightenFactor, TypeColorMap[types[1]])
+        : TypeColorMap[types[1]]
+      : undefined;
+
+  if (!color2) {
+    return css`
+      background-color: ${color1};
+    `;
+  }
+
+  return css`
+    background: linear-gradient(135deg, ${color1}, ${color2});
+  `;
+};
+
 const Root = styled.div`
   display: flex;
   align-items: center;
@@ -42,9 +67,12 @@ const PokemonCardContainer = styled.div`
   justify-content: center;
 
   width: 100%;
+  padding: 0 50px;
+
+  box-sizing: border-box;
 `;
 
-const PokemonCard = styled.div<{ type: PokemonType }>`
+const PokemonCard = styled.div<{ types: PokemonType[] }>`
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -56,11 +84,12 @@ const PokemonCard = styled.div<{ type: PokemonType }>`
   box-sizing: border-box;
 
   border-radius: 20px;
-  background-color: ${({ type }) => TypeColorMap[type]};
+  ${({ types }) => gradient(types)};
   cursor: pointer;
+  transition: background-color 0.3s ease-out;
 
   &:hover {
-    background-color: ${({ type }) => lighten(0.1, TypeColorMap[type])};
+    ${({ types }) => gradient(types, true)};
   }
 `;
 
@@ -89,8 +118,8 @@ const Home: NextPage<Props> = ({ data }) => {
     <Root>
       <h1>Pokemon</h1>
       <PokemonCardContainer>
-        {data.map(({ id, name, image, type }) => (
-          <PokemonCard key={id} type={type}>
+        {data.map(({ id, name, image, types }) => (
+          <PokemonCard key={id} types={types}>
             <PokemonCardTitle>{`#${id} ${name}`}</PokemonCardTitle>
             <Image src={image} alt={name} width={100} height={100} />
           </PokemonCard>

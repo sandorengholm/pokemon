@@ -27,7 +27,7 @@ export interface Pokemon {
   id: number;
   name: string;
   image: string;
-  type: PokemonType;
+  types: PokemonType[];
 }
 
 export interface RawPokemon {
@@ -67,19 +67,14 @@ export const getPokemon = async () => {
     query: PokemonQuery,
   });
 
-  const modifiedData: Pokemon[] = data.pokemon_v2_pokemon.map((pokemon) => {
-    if (!pokemon.pokemon_v2_pokemontypes[0]?.pokemon_v2_type.name) {
-      console.log(pokemon.pokemon_v2_pokemonspecy.name);
-    }
-
-    return {
-      id: pokemon.id,
-      name: pokemon.pokemon_v2_pokemonspecy.name,
-      image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
-      type: pokemon.pokemon_v2_pokemontypes[0]?.pokemon_v2_type
-        .name as PokemonType,
-    };
-  });
+  const modifiedData: Pokemon[] = data.pokemon_v2_pokemon.map((pokemon) => ({
+    id: pokemon.id,
+    name: pokemon.pokemon_v2_pokemonspecy.name,
+    image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
+    types: pokemon.pokemon_v2_pokemontypes.map(
+      (type) => type.pokemon_v2_type.name as PokemonType
+    ),
+  }));
 
   return modifiedData;
 };
