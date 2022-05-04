@@ -1,14 +1,42 @@
 import { gql } from '@apollo/client';
 import apolloClient from '../apollo-client';
 
+export type PokemonType =
+  | 'normal'
+  | 'fighting'
+  | 'flying'
+  | 'poison'
+  | 'ground'
+  | 'rock'
+  | 'bug'
+  | 'ghost'
+  | 'steel'
+  | 'fire'
+  | 'water'
+  | 'grass'
+  | 'electric'
+  | 'psychic'
+  | 'ice'
+  | 'dragon'
+  | 'dark'
+  | 'fairy'
+  | 'unknown'
+  | 'shadow';
+
 export interface Pokemon {
   id: number;
   name: string;
   image: string;
+  type: PokemonType;
 }
 
 export interface RawPokemon {
   id: number;
+  pokemon_v2_pokemontypes: {
+    pokemon_v2_type: {
+      name: string;
+    };
+  }[];
   pokemon_v2_pokemonspecy: {
     name: string;
   };
@@ -22,6 +50,11 @@ export const PokemonQuery = gql`
   query PokemonQuery {
     pokemon_v2_pokemon {
       id
+      pokemon_v2_pokemontypes {
+        pokemon_v2_type {
+          name
+        }
+      }
       pokemon_v2_pokemonspecy {
         name
       }
@@ -34,11 +67,19 @@ export const getPokemon = async () => {
     query: PokemonQuery,
   });
 
-  const modifiedData: Pokemon[] = data.pokemon_v2_pokemon.map((pokemon) => ({
-    ...pokemon,
-    name: pokemon.pokemon_v2_pokemonspecy.name,
-    image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
-  }));
+  const modifiedData: Pokemon[] = data.pokemon_v2_pokemon.map((pokemon) => {
+    if (!pokemon.pokemon_v2_pokemontypes[0]?.pokemon_v2_type.name) {
+      console.log(pokemon.pokemon_v2_pokemonspecy.name);
+    }
+
+    return {
+      id: pokemon.id,
+      name: pokemon.pokemon_v2_pokemonspecy.name,
+      image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
+      type: pokemon.pokemon_v2_pokemontypes[0]?.pokemon_v2_type
+        .name as PokemonType,
+    };
+  });
 
   return modifiedData;
 };
